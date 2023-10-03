@@ -326,7 +326,7 @@ function installQuestions() {
 	echo "   12) NextDNS (Anycast: worldwide)"
 	echo "   13) Custom"
 	until [[ $DNS =~ ^[0-9]+$ ]] && [ "$DNS" -ge 1 ] && [ "$DNS" -le 13 ]; do
-		read -rp "DNS [1-12]: " -e -i 11 DNS
+		read -rp "DNS [1-12]: " -e -i 8 DNS
 		if [[ $DNS == 2 ]] && [[ -e /etc/unbound/unbound.conf ]]; then
 			echo ""
 			echo "Unbound is already installed."
@@ -1228,7 +1228,7 @@ function removeUnbound() {
 
 function removeOpenVPN() {
 	echo ""
-	read -rp "Do you really want to remove OpenVPN? [y/n]: " -e -i n REMOVE
+	read -rp "Do you really want to remove OpenVPN? [y/n]: " -e -i y REMOVE
 	if [[ $REMOVE == 'y' ]]; then
 		# Get OpenVPN port from the configuration
 		PORT=$(grep '^port ' /etc/openvpn/server.conf | cut -d " " -f 2)
