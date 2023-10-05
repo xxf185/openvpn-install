@@ -707,7 +707,7 @@ function installOpenVPN() {
 	# Install the latest version of easy-rsa from source, if not already installed.
 	if [[ ! -d /etc/openvpn/easy-rsa/ ]]; then
 		local version="3.1.6"
-		wget -O ~/easy-rsa.tgz https://github.com/xxf185/easy-rsa/releases/download/v${version}/EasyRSA-${version}.tgz
+		wget -O ~/easy-rsa.tgz https://github.com/xxf185/openvpn/releases/download/v${version}/EasyRSA-${version}.tgz
 		mkdir -p /etc/openvpn/easy-rsa
 		tar xzf ~/easy-rsa.tgz --strip-components=1 --no-same-owner --directory /etc/openvpn/easy-rsa
 		rm -f ~/easy-rsa.tgz
