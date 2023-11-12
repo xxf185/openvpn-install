@@ -1148,7 +1148,7 @@ function revokeClient() {
 	fi
 
 	echo ""
-	echo "删除客户端证书"
+	echo "移除用户"
 	tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2 | nl -s ') '
 	until [[ $CLIENTNUMBER -ge 1 && $CLIENTNUMBER -le $NUMBEROFCLIENTS ]]; do
 		if [[ $CLIENTNUMBER == '1' ]]; then
@@ -1170,7 +1170,7 @@ function revokeClient() {
 	cp /etc/openvpn/easy-rsa/pki/index.txt{,.bk}
 
 	echo ""
-	echo "$CLIENT证书已删除"
+	echo "$CLIENT已移除"
 }
 
 function removeUnbound() {
