@@ -38,9 +38,9 @@ function checkOS() {
 			OS="ubuntu"
 			MAJOR_UBUNTU_VERSION=$(echo "$VERSION_ID" | cut -d '.' -f1)
 			if [[ $MAJOR_UBUNTU_VERSION -lt 16 ]]; then
-				echo "⚠️ Your version of Ubuntu is not supported."
+				echo "⚠️ 您的 Ubuntu 版本不受支持"
 				echo ""
-				echo "However, if you're using Ubuntu >= 16.04 or beta, then you can continue, at your own risk."
+				echo "但是，如果您使用的是 Ubuntu >= 16.04 或 beta，那么您可以继续，但风险自负。"
 				echo ""
 				until [[ $CONTINUE =~ (y|n) ]]; do
 					read -rp "Continue? [y/n]: " -e CONTINUE
@@ -58,9 +58,9 @@ function checkOS() {
 		if [[ $ID == "centos" || $ID == "rocky" || $ID == "almalinux" ]]; then
 			OS="centos"
 			if [[ $VERSION_ID -lt 7 ]]; then
-				echo "⚠️ Your version of CentOS is not supported."
+				echo "⚠️ 您的 CentOS 版本不支持。"
 				echo ""
-				echo "The script only support CentOS 7 and CentOS 8."
+				echo "该脚本仅支持 CentOS 7 和 CentOS 8。"
 				echo ""
 				exit 1
 			fi
@@ -68,18 +68,18 @@ function checkOS() {
 		if [[ $ID == "ol" ]]; then
 			OS="oracle"
 			if [[ ! $VERSION_ID =~ (8) ]]; then
-				echo "Your version of Oracle Linux is not supported."
+				echo "您的 Oracle Linux 版本不支持."
 				echo ""
-				echo "The script only support Oracle Linux 8."
+				echo "该脚本仅支持 Oracle Linux 8。"
 				exit 1
 			fi
 		fi
 		if [[ $ID == "amzn" ]]; then
 			OS="amzn"
 			if [[ $VERSION_ID != "2" ]]; then
-				echo "⚠️ Your version of Amazon Linux is not supported."
+				echo "⚠️ 您的 Amazon Linux 版本不支持。"
 				echo ""
-				echo "The script only support Amazon Linux 2."
+				echo "该脚本仅支持 Amazon Linux 2。"
 				echo ""
 				exit 1
 			fi
@@ -87,18 +87,18 @@ function checkOS() {
 	elif [[ -e /etc/arch-release ]]; then
 		OS=arch
 	else
-		echo "Looks like you aren't running this installer on a Debian, Ubuntu, Fedora, CentOS, Amazon Linux 2, Oracle Linux 8 or Arch Linux system"
+		echo "没有在 Debian、Ubuntu、Fedora、CentOS、Amazon Linux 2、Oracle Linux 8 或 Arch Linux 系统上运行此安装程序"
 		exit 1
 	fi
 }
 
 function initialCheck() {
 	if ! isRoot; then
-		echo "Sorry, you need to run this as root"
+		echo "需要以 root 身份运行此程序"
 		exit 1
 	fi
 	if ! tunAvailable; then
-		echo "TUN is not available"
+		echo "TUN 不可用"
 		exit 1
 	fi
 	checkOS
@@ -237,8 +237,8 @@ function installQuestions() {
 	# If $IP is a private IP address, the server must be behind NAT
 	if echo "$IP" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.168)'; then
 		echo ""
-		echo "It seems this server is behind NAT. What is its public IPv4 address or hostname?"
-		echo "We need it for the clients to connect to the server."
+		echo ""
+		echo ""
 
 		PUBLICIP=$(curl -s https://api.ipify.org)
 		until [[ $ENDPOINT != "" ]]; do
@@ -325,14 +325,9 @@ function installQuestions() {
 		read -rp "选择 [1-12]: " -e -i 8 DNS
 		if [[ $DNS == 2 ]] && [[ -e /etc/unbound/unbound.conf ]]; then
 			echo ""
-			echo "Unbound is already installed."
-			echo "You can allow the script to configure it in order to use it from your OpenVPN clients"
-			echo "We will simply add a second server to /etc/unbound/unbound.conf for the OpenVPN subnet."
-			echo "No changes are made to the current configuration."
-			echo ""
 
 			until [[ $CONTINUE =~ (y|n) ]]; do
-				read -rp "Apply configuration changes to Unbound? [y/n]: " -e CONTINUE
+				read -rp "将配置更改应用到 Unbound？[y/n]: " -e CONTINUE
 			done
 			if [[ $CONTINUE == "n" ]]; then
 				# Break the loop and cleanup
@@ -357,12 +352,12 @@ function installQuestions() {
 		read -rp"选择 [y/n]: " -e -i n COMPRESSION_ENABLED
 	done
 	if [[ $COMPRESSION_ENABLED == "y" ]]; then
-		echo "Choose which compression algorithm you want to use: (they are ordered by efficiency)"
+		echo "选择您要使用的压缩算法（按效率排序）"
 		echo "   1) LZ4-v2"
 		echo "   2) LZ4"
 		echo "   3) LZ0"
 		until [[ $COMPRESSION_CHOICE =~ ^[1-3]$ ]]; do
-			read -rp"Compression algorithm [1-3]: " -e -i 1 COMPRESSION_CHOICE
+			read -rp"选择 [1-3]: " -e -i 1 COMPRESSION_CHOICE
 		done
 		case $COMPRESSION_CHOICE in
 		1)
@@ -394,15 +389,15 @@ function installQuestions() {
 		TLS_SIG="1" # tls-crypt
 	else
 		echo ""
-		echo "Choose which cipher you want to use for the data channel:"
-		echo "   1) AES-128-GCM (recommended)"
+		echo "数据通道的密码："
+		echo "   1) AES-128-GCM (默认)"
 		echo "   2) AES-192-GCM"
 		echo "   3) AES-256-GCM"
 		echo "   4) AES-128-CBC"
 		echo "   5) AES-192-CBC"
 		echo "   6) AES-256-CBC"
 		until [[ $CIPHER_CHOICE =~ ^[1-6]$ ]]; do
-			read -rp "Cipher [1-6]: " -e -i 1 CIPHER_CHOICE
+			read -rp "选择 [1-6]: " -e -i 1 CIPHER_CHOICE
 		done
 		case $CIPHER_CHOICE in
 		1)
@@ -425,21 +420,21 @@ function installQuestions() {
 			;;
 		esac
 		echo ""
-		echo "Choose what kind of certificate you want to use:"
-		echo "   1) ECDSA (recommended)"
+		echo "证书类型"
+		echo "   1) ECDSA (默认)"
 		echo "   2) RSA"
 		until [[ $CERT_TYPE =~ ^[1-2]$ ]]; do
-			read -rp"Certificate key type [1-2]: " -e -i 1 CERT_TYPE
+			read -rp"选择 [1-2]: " -e -i 1 CERT_TYPE
 		done
 		case $CERT_TYPE in
 		1)
 			echo ""
-			echo "Choose which curve you want to use for the certificate's key:"
-			echo "   1) prime256v1 (recommended)"
+			echo "证书密钥曲线"
+			echo "   1) prime256v1 (默认)"
 			echo "   2) secp384r1"
 			echo "   3) secp521r1"
 			until [[ $CERT_CURVE_CHOICE =~ ^[1-3]$ ]]; do
-				read -rp"Curve [1-3]: " -e -i 1 CERT_CURVE_CHOICE
+				read -rp"选择 [1-3]: " -e -i 1 CERT_CURVE_CHOICE
 			done
 			case $CERT_CURVE_CHOICE in
 			1)
@@ -456,11 +451,11 @@ function installQuestions() {
 		2)
 			echo ""
 			echo "Choose which size you want to use for the certificate's RSA key:"
-			echo "   1) 2048 bits (recommended)"
+			echo "   1) 2048 bits (默认)"
 			echo "   2) 3072 bits"
 			echo "   3) 4096 bits"
 			until [[ $RSA_KEY_SIZE_CHOICE =~ ^[1-3]$ ]]; do
-				read -rp "RSA key size [1-3]: " -e -i 1 RSA_KEY_SIZE_CHOICE
+				read -rp "选择 [1-3]: " -e -i 1 RSA_KEY_SIZE_CHOICE
 			done
 			case $RSA_KEY_SIZE_CHOICE in
 			1)
@@ -479,10 +474,10 @@ function installQuestions() {
 		echo "Choose which cipher you want to use for the control channel:"
 		case $CERT_TYPE in
 		1)
-			echo "   1) ECDHE-ECDSA-AES-128-GCM-SHA256 (recommended)"
+			echo "   1) ECDHE-ECDSA-AES-128-GCM-SHA256 (默认)"
 			echo "   2) ECDHE-ECDSA-AES-256-GCM-SHA384"
 			until [[ $CC_CIPHER_CHOICE =~ ^[1-2]$ ]]; do
-				read -rp"Control channel cipher [1-2]: " -e -i 1 CC_CIPHER_CHOICE
+				read -rp"选择 [1-2]: " -e -i 1 CC_CIPHER_CHOICE
 			done
 			case $CC_CIPHER_CHOICE in
 			1)
@@ -494,10 +489,10 @@ function installQuestions() {
 			esac
 			;;
 		2)
-			echo "   1) ECDHE-RSA-AES-128-GCM-SHA256 (recommended)"
+			echo "   1) ECDHE-RSA-AES-128-GCM-SHA256 (默认)"
 			echo "   2) ECDHE-RSA-AES-256-GCM-SHA384"
 			until [[ $CC_CIPHER_CHOICE =~ ^[1-2]$ ]]; do
-				read -rp"Control channel cipher [1-2]: " -e -i 1 CC_CIPHER_CHOICE
+				read -rp"选择 [1-2]: " -e -i 1 CC_CIPHER_CHOICE
 			done
 			case $CC_CIPHER_CHOICE in
 			1)
@@ -510,21 +505,21 @@ function installQuestions() {
 			;;
 		esac
 		echo ""
-		echo "Choose what kind of Diffie-Hellman key you want to use:"
-		echo "   1) ECDH (recommended)"
+		echo "Diffie-Hellman密钥类型"
+		echo "   1) ECDH (默认)"
 		echo "   2) DH"
 		until [[ $DH_TYPE =~ [1-2] ]]; do
-			read -rp"DH key type [1-2]: " -e -i 1 DH_TYPE
+			read -rp"选择 [1-2]: " -e -i 1 DH_TYPE
 		done
 		case $DH_TYPE in
 		1)
 			echo ""
-			echo "Choose which curve you want to use for the ECDH key:"
-			echo "   1) prime256v1 (recommended)"
+			echo "ECDH 密钥的曲线"
+			echo "   1) prime256v1 (默认)"
 			echo "   2) secp384r1"
 			echo "   3) secp521r1"
 			while [[ $DH_CURVE_CHOICE != "1" && $DH_CURVE_CHOICE != "2" && $DH_CURVE_CHOICE != "3" ]]; do
-				read -rp"Curve [1-3]: " -e -i 1 DH_CURVE_CHOICE
+				read -rp"选择 [1-3]: " -e -i 1 DH_CURVE_CHOICE
 			done
 			case $DH_CURVE_CHOICE in
 			1)
@@ -540,12 +535,12 @@ function installQuestions() {
 			;;
 		2)
 			echo ""
-			echo "Choose what size of Diffie-Hellman key you want to use:"
-			echo "   1) 2048 bits (recommended)"
+			echo "Diffie-Hellman 密钥长度"
+			echo "   1) 2048 bits (默认)"
 			echo "   2) 3072 bits"
 			echo "   3) 4096 bits"
 			until [[ $DH_KEY_SIZE_CHOICE =~ ^[1-3]$ ]]; do
-				read -rp "DH key size [1-3]: " -e -i 1 DH_KEY_SIZE_CHOICE
+				read -rp "选择 [1-3]: " -e -i 1 DH_KEY_SIZE_CHOICE
 			done
 			case $DH_KEY_SIZE_CHOICE in
 			1)
@@ -563,16 +558,16 @@ function installQuestions() {
 		echo ""
 		# The "auth" options behaves differently with AEAD ciphers
 		if [[ $CIPHER =~ CBC$ ]]; then
-			echo "The digest algorithm authenticates data channel packets and tls-auth packets from the control channel."
+			echo "摘要算法对来自控制通道的数据通道数据包和 tls-auth 数据包进行身份验证."
 		elif [[ $CIPHER =~ GCM$ ]]; then
-			echo "The digest algorithm authenticates tls-auth packets from the control channel."
+			echo "摘要算法对来自控制通道的 tls-auth 数据包进行身份验证。"
 		fi
-		echo "Which digest algorithm do you want to use for HMAC?"
-		echo "   1) SHA-256 (recommended)"
+		echo "HMAC 使用哪种算法"
+		echo "   1) SHA-256 (默认)"
 		echo "   2) SHA-384"
 		echo "   3) SHA-512"
 		until [[ $HMAC_ALG_CHOICE =~ ^[1-3]$ ]]; do
-			read -rp "Digest algorithm [1-3]: " -e -i 1 HMAC_ALG_CHOICE
+			read -rp "选择 [1-3]: " -e -i 1 HMAC_ALG_CHOICE
 		done
 		case $HMAC_ALG_CHOICE in
 		1)
@@ -586,12 +581,12 @@ function installQuestions() {
 			;;
 		esac
 		echo ""
-		echo "You can add an additional layer of security to the control channel with tls-auth and tls-crypt"
-		echo "tls-auth authenticates the packets, while tls-crypt authenticate and encrypt them."
-		echo "   1) tls-crypt (recommended)"
+		echo "您可以使用 tls-auth 和 tls-crypt 为控制通道添加额外的安全层"
+		echo "tls-auth 对数据包进行身份验证，而 tls-crypt 对数据包进行身份验证和加密。"
+		echo "   1) tls-crypt (默认)"
 		echo "   2) tls-auth"
 		until [[ $TLS_SIG =~ [1-2] ]]; do
-			read -rp "Control channel additional security mechanism [1-2]: " -e -i 1 TLS_SIG
+			read -rp "选择 [1-2]: " -e -i 1 TLS_SIG
 		done
 	fi
 	echo ""
@@ -641,10 +636,10 @@ function installOpenVPN() {
 	# $NIC can not be empty for script rm-openvpn-rules.sh
 	if [[ -z $NIC ]]; then
 		echo
-		echo "Can not detect public interface."
-		echo "This needs for setup MASQUERADE."
+		echo "无法检测公共接口。"
+		echo "这需要设置MASQUERADE。"
 		until [[ $CONTINUE =~ (y|n) ]]; do
-			read -rp "Continue? [y/n]: " -e CONTINUE
+			read -rp "继续 [y/n]: " -e CONTINUE
 		done
 		if [[ $CONTINUE == "n" ]]; then
 			exit 1
