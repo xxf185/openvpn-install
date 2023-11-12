@@ -256,10 +256,10 @@ function installQuestions() {
 		PING6="ping -6 -c3 ipv6.google.com > /dev/null 2>&1"
 	fi
 	if eval "$PING6"; then
-		echo "Your host appears to have IPv6 connectivity."
+		echo "主机有 IPv6 连接。"
 		SUGGESTION="y"
 	else
-		echo "Your host does not appear to have IPv6 connectivity."
+		echo "主机没有 IPv6 连接。"
 		SUGGESTION="n"
 	fi
 	echo ""
@@ -352,7 +352,7 @@ function installQuestions() {
 		fi
 	done
 	echo ""
-	echo "您想使用压缩吗.不建议这样做.因为 VORACLE 攻击会利用它."
+	echo "启用压缩吗[默认n]"
 	until [[ $COMPRESSION_ENABLED =~ (y|n) ]]; do
 		read -rp"选择 [y/n]: " -e -i n COMPRESSION_ENABLED
 	done
@@ -377,7 +377,7 @@ function installQuestions() {
 		esac
 	fi
 	echo ""
-	echo "推荐使用脚本提供的默认参数。"
+	echo "推荐默认参数。"
 	echo ""
 	until [[ $CUSTOMIZE_ENC =~ (y|n) ]]; do
 		read -rp "选择 [y/n]: " -e -i n CUSTOMIZE_ENC
