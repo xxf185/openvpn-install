@@ -217,15 +217,11 @@ access-control: fd42:42:42:42::/112 allow' >>/etc/unbound/openvpn.conf
 }
 
 function installQuestions() {
-	echo "Welcome to the OpenVPN installer!"
-	echo "The git repository is available at: https://github.com/angristan/openvpn-install"
 	echo ""
-
-	echo "I need to ask you a few questions before starting the setup."
-	echo "You can leave the default options and just press enter if you are ok with them."
 	echo ""
-	echo "I need to know the IPv4 address of the network interface you want OpenVPN listening to."
-	echo "Unless your server is behind NAT, it should be your public IPv4 address."
+	echo "--------------------OpenVPN--------------------"
+	echo ""
+	echo ""
 
 	# Detect public IPv4 address and pre-fill for the user
 	IP=$(ip -4 addr | sed -ne 's|^.* inet \([^/]*\)/.* scope global.*$|\1|p' | head -1)
@@ -236,7 +232,7 @@ function installQuestions() {
 	fi
 	APPROVE_IP=${APPROVE_IP:-n}
 	if [[ $APPROVE_IP =~ n ]]; then
-		read -rp "IP地址: " -e -i "$IP" IP
+		read -rp "IPv4地址: " -e -i "$IP" IP
 	fi
 	# If $IP is a private IP address, the server must be behind NAT
 	if echo "$IP" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.168)'; then
