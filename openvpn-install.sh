@@ -1302,7 +1302,7 @@ function manageMenu() {
 	echo "   1) 添加用户"
 	echo "   2) 移除用户"
 	echo "   3) 卸载"
-	echo "   4)退出"
+	echo "   4) 退出"
 	until [[ $MENU_OPTION =~ ^[1-4]$ ]]; do
 		read -rp "选择[1-4]: " MENU_OPTION
 	done
