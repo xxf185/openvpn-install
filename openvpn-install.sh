@@ -236,7 +236,7 @@ function installQuestions() {
 	fi
 	APPROVE_IP=${APPROVE_IP:-n}
 	if [[ $APPROVE_IP =~ n ]]; then
-		read -rp "IP address: " -e -i "$IP" IP
+		read -rp "IP地址: " -e -i "$IP" IP
 	fi
 	# If $IP is a private IP address, the server must be behind NAT
 	if echo "$IP" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.168)'; then
@@ -251,7 +251,7 @@ function installQuestions() {
 	fi
 
 	echo ""
-	echo "Checking for IPv6 connectivity..."
+	echo "正在检查IPv6连接..."
 	echo ""
 	# "ping6" and "ping -6" availability varies depending on the distribution
 	if type ping6 >/dev/null 2>&1; then
@@ -269,15 +269,15 @@ function installQuestions() {
 	echo ""
 	# Ask the user if they want to enable IPv6 regardless its availability.
 	until [[ $IPV6_SUPPORT =~ (y|n) ]]; do
-		read -rp "Do you want to enable IPv6 support (NAT)? [y/n]: " -e -i $SUGGESTION IPV6_SUPPORT
+		read -rp "要启用 IPv6 支持吗(NAT)? [y/n]: " -e -i $SUGGESTION IPV6_SUPPORT
 	done
 	echo ""
-	echo "What port do you want OpenVPN to listen to?"
-	echo "   1) Default: 1194"
+	echo "OpenVPN 监听端口"
+	echo "   1) 默认:1194"
 	echo "   2) Custom"
-	echo "   3) Random [49152-65535]"
+	echo "   3) 随机[49152-65535]"
 	until [[ $PORT_CHOICE =~ ^[1-3]$ ]]; do
-		read -rp "Port choice [1-3]: " -e -i 1 PORT_CHOICE
+		read -rp "选择 [1-3]: " -e -i 1 PORT_CHOICE
 	done
 	case $PORT_CHOICE in
 	1)
@@ -295,12 +295,12 @@ function installQuestions() {
 		;;
 	esac
 	echo ""
-	echo "What protocol do you want OpenVPN to use?"
-	echo "UDP is faster. Unless it is not available, you shouldn't use TCP."
-	echo "   1) UDP"
+	echo
+	echo "   协议"
+	echo "   1) UDP[默认]"
 	echo "   2) TCP"
 	until [[ $PROTOCOL_CHOICE =~ ^[1-2]$ ]]; do
-		read -rp "Protocol [1-2]: " -e -i 1 PROTOCOL_CHOICE
+		read -rp "选择 [1-2]: " -e -i 1 PROTOCOL_CHOICE
 	done
 	case $PROTOCOL_CHOICE in
 	1)
@@ -311,7 +311,7 @@ function installQuestions() {
 		;;
 	esac
 	echo ""
-	echo "What DNS resolvers do you want to use with the VPN?"
+	echo ""DNS server""
 	echo "   1) Current system resolvers (from /etc/resolv.conf)"
 	echo "   2) Self-hosted DNS Resolver (Unbound)"
 	echo "   3) Cloudflare (Anycast: worldwide)"
@@ -326,7 +326,7 @@ function installQuestions() {
 	echo "   12) NextDNS (Anycast: worldwide)"
 	echo "   13) Custom"
 	until [[ $DNS =~ ^[0-9]+$ ]] && [ "$DNS" -ge 1 ] && [ "$DNS" -le 13 ]; do
-		read -rp "DNS [1-12]: " -e -i 8 DNS
+		read -rp "选择 [1-12]: " -e -i 8 DNS
 		if [[ $DNS == 2 ]] && [[ -e /etc/unbound/unbound.conf ]]; then
 			echo ""
 			echo "Unbound is already installed."
@@ -356,9 +356,9 @@ function installQuestions() {
 		fi
 	done
 	echo ""
-	echo "Do you want to use compression? It is not recommended since the VORACLE attack makes use of it."
+	echo "您想使用压缩吗.不建议这样做.因为 VORACLE 攻击会利用它."
 	until [[ $COMPRESSION_ENABLED =~ (y|n) ]]; do
-		read -rp"Enable compression? [y/n]: " -e -i n COMPRESSION_ENABLED
+		read -rp"选择 [y/n]: " -e -i n COMPRESSION_ENABLED
 	done
 	if [[ $COMPRESSION_ENABLED == "y" ]]; then
 		echo "Choose which compression algorithm you want to use: (they are ordered by efficiency)"
@@ -381,13 +381,10 @@ function installQuestions() {
 		esac
 	fi
 	echo ""
-	echo "Do you want to customize encryption settings?"
-	echo "Unless you know what you're doing, you should stick with the default parameters provided by the script."
-	echo "Note that whatever you choose, all the choices presented in the script are safe. (Unlike OpenVPN's defaults)"
-	echo "See https://github.com/angristan/openvpn-install#security-and-encryption to learn more."
+	echo "推荐使用脚本提供的默认参数。"
 	echo ""
 	until [[ $CUSTOMIZE_ENC =~ (y|n) ]]; do
-		read -rp "Customize encryption settings? [y/n]: " -e -i n CUSTOMIZE_ENC
+		read -rp "选择 [y/n]: " -e -i n CUSTOMIZE_ENC
 	done
 	if [[ $CUSTOMIZE_ENC == "n" ]]; then
 		# Use default, sane and fast parameters
@@ -602,11 +599,9 @@ function installQuestions() {
 		done
 	fi
 	echo ""
-	echo "Okay, that was all I needed. We are ready to setup your OpenVPN server now."
-	echo "You will be able to generate a client at the end of the installation."
 	APPROVE_INSTALL=${APPROVE_INSTALL:-n}
 	if [[ $APPROVE_INSTALL =~ n ]]; then
-		read -n1 -r -p "Press any key to continue..."
+		read -n1 -r -p "按任意键继续......"
 	fi
 }
 
@@ -1059,21 +1054,18 @@ verb 3" >>/etc/openvpn/client-template.txt
 
 function newClient() {
 	echo ""
-	echo "Tell me a name for the client."
-	echo "The name must consist of alphanumeric character. It may also include an underscore or a dash."
+	echo "输入用户名"
 
 	until [[ $CLIENT =~ ^[a-zA-Z0-9_-]+$ ]]; do
-		read -rp "Client name: " -e CLIENT
+		read -rp "用户名: " -e CLIENT
 	done
 
 	echo ""
-	echo "Do you want to protect the configuration file with a password?"
-	echo "(e.g. encrypt the private key with a password)"
-	echo "   1) Add a passwordless client"
-	echo "   2) Use a password for the client"
+	echo "   1) 添加无密码配置文件"
+	echo "   2) 添加有密码配置文件"
 
 	until [[ $PASS =~ ^[1-2]$ ]]; do
-		read -rp "Select an option [1-2]: " -e -i 1 PASS
+		read -rp "选择 [1-2]: " -e -i 1 PASS
 	done
 
 	CLIENTEXISTS=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep -c -E "/CN=$CLIENT\$")
@@ -1150,8 +1142,9 @@ function newClient() {
 	} >>"$homeDir/$CLIENT.ovpn"
 
 	echo ""
-	echo "The configuration file has been written to $homeDir/$CLIENT.ovpn."
-	echo "Download the .ovpn file and import it in your OpenVPN client."
+	echo "安装完成"
+	echo "配置文件目录 $homeDir/$CLIENT.ovpn."
+	echo "下载.ovpn文件并将其导入OpenVPN客户端"
 
 	exit 0
 }
@@ -1160,18 +1153,18 @@ function revokeClient() {
 	NUMBEROFCLIENTS=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep -c "^V")
 	if [[ $NUMBEROFCLIENTS == '0' ]]; then
 		echo ""
-		echo "You have no existing clients!"
+		echo "没有用户"
 		exit 1
 	fi
 
 	echo ""
-	echo "Select the existing client certificate you want to revoke"
+	echo "删除客户端证书"
 	tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2 | nl -s ') '
 	until [[ $CLIENTNUMBER -ge 1 && $CLIENTNUMBER -le $NUMBEROFCLIENTS ]]; do
 		if [[ $CLIENTNUMBER == '1' ]]; then
-			read -rp "Select one client [1]: " CLIENTNUMBER
+			read -rp "选择 [1]: " CLIENTNUMBER
 		else
-			read -rp "Select one client [1-$NUMBEROFCLIENTS]: " CLIENTNUMBER
+			read -rp "选择 [1-$NUMBEROFCLIENTS]: " CLIENTNUMBER
 		fi
 	done
 	CLIENT=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2 | sed -n "$CLIENTNUMBER"p)
@@ -1187,7 +1180,7 @@ function revokeClient() {
 	cp /etc/openvpn/easy-rsa/pki/index.txt{,.bk}
 
 	echo ""
-	echo "Certificate for client $CLIENT revoked."
+	echo "$CLIENT证书已删除"
 }
 
 function removeUnbound() {
@@ -1197,8 +1190,8 @@ function removeUnbound() {
 
 	until [[ $REMOVE_UNBOUND =~ (y|n) ]]; do
 		echo ""
-		echo "If you were already using Unbound before installing OpenVPN, I removed the configuration related to OpenVPN."
-		read -rp "Do you want to completely remove Unbound? [y/n]: " -e REMOVE_UNBOUND
+		echo "如果安装 OpenVPN 之前已经使用 Unbound，就会删除与 OpenVPN 相关的配置。"
+		read -rp "删除Unbound？ [y/n]: " -e REMOVE_UNBOUND
 	done
 
 	if [[ $REMOVE_UNBOUND == 'y' ]]; then
@@ -1218,17 +1211,17 @@ function removeUnbound() {
 		rm -rf /etc/unbound/
 
 		echo ""
-		echo "Unbound removed!"
+		echo "未绑定已删除！"
 	else
 		systemctl restart unbound
 		echo ""
-		echo "Unbound wasn't removed."
+		echo "未绑定未删除。"
 	fi
 }
 
 function removeOpenVPN() {
 	echo ""
-	read -rp "Do you really want to remove OpenVPN? [y/n]: " -e -i y REMOVE
+	read -rp "卸载OpenVPN? [y/n]: " -e -i y REMOVE
 	if [[ $REMOVE == 'y' ]]; then
 		# Get OpenVPN port from the configuration
 		PORT=$(grep '^port ' /etc/openvpn/server.conf | cut -d " " -f 2)
@@ -1295,26 +1288,23 @@ function removeOpenVPN() {
 			removeUnbound
 		fi
 		echo ""
-		echo "OpenVPN removed!"
+		echo "卸载完成"
 	else
 		echo ""
-		echo "Removal aborted!"
+		echo "删除失败"
 	fi
 }
 
 function manageMenu() {
-	echo "Welcome to OpenVPN-install!"
-	echo "The git repository is available at: https://github.com/angristan/openvpn-install"
 	echo ""
-	echo "It looks like OpenVPN is already installed."
+	echo "--------------------OpenVPN--------------------"
 	echo ""
-	echo "What do you want to do?"
-	echo "   1) Add a new user"
-	echo "   2) Revoke existing user"
-	echo "   3) Remove OpenVPN"
-	echo "   4) Exit"
+	echo "   1) 添加用户"
+	echo "   2) 移除用户"
+	echo "   3) 卸载"
+	echo "   4)退出"
 	until [[ $MENU_OPTION =~ ^[1-4]$ ]]; do
-		read -rp "Select an option [1-4]: " MENU_OPTION
+		read -rp "选择[1-4]: " MENU_OPTION
 	done
 
 	case $MENU_OPTION in
