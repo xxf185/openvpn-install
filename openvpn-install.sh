@@ -1047,7 +1047,7 @@ function newClient() {
 	echo ""
 	echo "输入用户名"
 
-	until [[ $CLIENT =~ ^[a-zA-Z0-9_-]+$ ]]; do
+	until [[ $CLIENT =~ ^[a-zA-Z0-9_-.]+$ ]]; do
 		read -rp "name: " -e CLIENT
 	done
 
