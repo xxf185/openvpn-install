@@ -2,7 +2,7 @@
 # shellcheck disable=SC1091,SC2164,SC2034,SC1072,SC1073,SC1009
 
 # Secure OpenVPN server installer for Debian, Ubuntu, CentOS, Amazon Linux 2, Fedora, Oracle Linux 8, Arch Linux, Rocky Linux and AlmaLinux.
-# https://github.com/xxf185/openvpn-install
+# https://github.com/angristan/openvpn-install
 
 function isRoot() {
 	if [ "$EUID" -ne 0 ]; then
@@ -38,9 +38,9 @@ function checkOS() {
 			OS="ubuntu"
 			MAJOR_UBUNTU_VERSION=$(echo "$VERSION_ID" | cut -d '.' -f1)
 			if [[ $MAJOR_UBUNTU_VERSION -lt 16 ]]; then
-				echo "⚠️ 您的 Ubuntu 版本不受支持"
+				echo "⚠️ Your version of Ubuntu is not supported."
 				echo ""
-				echo "但是，如果您使用的是 Ubuntu >= 16.04 或 beta，那么您可以继续，但风险自负。"
+				echo "However, if you're using Ubuntu >= 16.04 or beta, then you can continue, at your own risk."
 				echo ""
 				until [[ $CONTINUE =~ (y|n) ]]; do
 					read -rp "Continue? [y/n]: " -e CONTINUE
@@ -58,9 +58,9 @@ function checkOS() {
 		if [[ $ID == "centos" || $ID == "rocky" || $ID == "almalinux" ]]; then
 			OS="centos"
 			if [[ $VERSION_ID -lt 7 ]]; then
-				echo "⚠️ 您的 CentOS 版本不支持。"
+				echo "⚠️ Your version of CentOS is not supported."
 				echo ""
-				echo "该脚本仅支持 CentOS 7 和 CentOS 8。"
+				echo "The script only support CentOS 7 and CentOS 8."
 				echo ""
 				exit 1
 			fi
@@ -68,18 +68,18 @@ function checkOS() {
 		if [[ $ID == "ol" ]]; then
 			OS="oracle"
 			if [[ ! $VERSION_ID =~ (8) ]]; then
-				echo "您的 Oracle Linux 版本不支持."
+				echo "Your version of Oracle Linux is not supported."
 				echo ""
-				echo "该脚本仅支持 Oracle Linux 8。"
+				echo "The script only support Oracle Linux 8."
 				exit 1
 			fi
 		fi
 		if [[ $ID == "amzn" ]]; then
 			OS="amzn"
 			if [[ $VERSION_ID != "2" ]]; then
-				echo "⚠️ 您的 Amazon Linux 版本不支持。"
+				echo "⚠️ Your version of Amazon Linux is not supported."
 				echo ""
-				echo "该脚本仅支持 Amazon Linux 2。"
+				echo "The script only support Amazon Linux 2."
 				echo ""
 				exit 1
 			fi
@@ -87,18 +87,18 @@ function checkOS() {
 	elif [[ -e /etc/arch-release ]]; then
 		OS=arch
 	else
-		echo "没有在 Debian、Ubuntu、Fedora、CentOS、Amazon Linux 2、Oracle Linux 8 或 Arch Linux 系统上运行此安装程序"
+		echo "Looks like you aren't running this installer on a Debian, Ubuntu, Fedora, CentOS, Amazon Linux 2, Oracle Linux 8 or Arch Linux system"
 		exit 1
 	fi
 }
 
 function initialCheck() {
 	if ! isRoot; then
-		echo "需要以 root 身份运行此程序"
+		echo "Sorry, you need to run this as root"
 		exit 1
 	fi
 	if ! tunAvailable; then
-		echo "TUN 不可用"
+		echo "TUN is not available"
 		exit 1
 	fi
 	checkOS
@@ -217,11 +217,15 @@ access-control: fd42:42:42:42::/112 allow' >>/etc/unbound/openvpn.conf
 }
 
 function installQuestions() {
+	echo "Welcome to the OpenVPN installer!"
+	echo "The git repository is available at: https://github.com/angristan/openvpn-install"
 	echo ""
+
+	echo "I need to ask you a few questions before starting the setup."
+	echo "You can leave the default options and just press enter if you are ok with them."
 	echo ""
-	echo "--------------------OpenVPN--------------------"
-	echo ""
-	echo ""
+	echo "I need to know the IPv4 address of the network interface you want OpenVPN listening to."
+	echo "Unless your server is behind NAT, it should be your public IPv4 address."
 
 	# Detect public IPv4 address and pre-fill for the user
 	IP=$(ip -4 addr | sed -ne 's|^.* inet \([^/]*\)/.* scope global.*$|\1|p' | head -1)
@@ -232,13 +236,13 @@ function installQuestions() {
 	fi
 	APPROVE_IP=${APPROVE_IP:-n}
 	if [[ $APPROVE_IP =~ n ]]; then
-		read -rp "IPv4地址: " -e -i "$IP" IP
+		read -rp "IP address: " -e -i "$IP" IP
 	fi
 	# If $IP is a private IP address, the server must be behind NAT
 	if echo "$IP" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.168)'; then
 		echo ""
-		echo ""
-		echo ""
+		echo "It seems this server is behind NAT. What is its public IPv4 address or hostname?"
+		echo "We need it for the clients to connect to the server."
 
 		PUBLICIP=$(curl -s https://api.ipify.org)
 		until [[ $ENDPOINT != "" ]]; do
@@ -247,7 +251,7 @@ function installQuestions() {
 	fi
 
 	echo ""
-	echo "正在检查IPv6连接..."
+	echo "Checking for IPv6 connectivity..."
 	echo ""
 	# "ping6" and "ping -6" availability varies depending on the distribution
 	if type ping6 >/dev/null 2>&1; then
@@ -256,24 +260,24 @@ function installQuestions() {
 		PING6="ping -6 -c3 ipv6.google.com > /dev/null 2>&1"
 	fi
 	if eval "$PING6"; then
-		echo "主机有 IPv6 连接。"
+		echo "Your host appears to have IPv6 connectivity."
 		SUGGESTION="y"
 	else
-		echo "主机没有 IPv6 连接。"
+		echo "Your host does not appear to have IPv6 connectivity."
 		SUGGESTION="n"
 	fi
 	echo ""
 	# Ask the user if they want to enable IPv6 regardless its availability.
 	until [[ $IPV6_SUPPORT =~ (y|n) ]]; do
-		read -rp "要启用 IPv6 支持吗(NAT)? [y/n]: " -e -i $SUGGESTION IPV6_SUPPORT
+		read -rp "Do you want to enable IPv6 support (NAT)? [y/n]: " -e -i $SUGGESTION IPV6_SUPPORT
 	done
 	echo ""
-	echo "OpenVPN 监听端口"
-	echo "   1) 默认:1194"
+	echo "What port do you want OpenVPN to listen to?"
+	echo "   1) Default: 1194"
 	echo "   2) Custom"
-	echo "   3) 随机[49152-65535]"
+	echo "   3) Random [49152-65535]"
 	until [[ $PORT_CHOICE =~ ^[1-3]$ ]]; do
-		read -rp "选择 [1-3]: " -e -i 1 PORT_CHOICE
+		read -rp "Port choice [1-3]: " -e -i 1 PORT_CHOICE
 	done
 	case $PORT_CHOICE in
 	1)
@@ -291,12 +295,12 @@ function installQuestions() {
 		;;
 	esac
 	echo ""
-	echo
-	echo "   协议"
-	echo "   1) UDP[默认]"
+	echo "What protocol do you want OpenVPN to use?"
+	echo "UDP is faster. Unless it is not available, you shouldn't use TCP."
+	echo "   1) UDP"
 	echo "   2) TCP"
 	until [[ $PROTOCOL_CHOICE =~ ^[1-2]$ ]]; do
-		read -rp "选择 [1-2]: " -e -i 1 PROTOCOL_CHOICE
+		read -rp "Protocol [1-2]: " -e -i 1 PROTOCOL_CHOICE
 	done
 	case $PROTOCOL_CHOICE in
 	1)
@@ -307,7 +311,7 @@ function installQuestions() {
 		;;
 	esac
 	echo ""
-	echo ""DNS server""
+	echo "What DNS resolvers do you want to use with the VPN?"
 	echo "   1) Current system resolvers (from /etc/resolv.conf)"
 	echo "   2) Self-hosted DNS Resolver (Unbound)"
 	echo "   3) Cloudflare (Anycast: worldwide)"
@@ -322,12 +326,17 @@ function installQuestions() {
 	echo "   12) NextDNS (Anycast: worldwide)"
 	echo "   13) Custom"
 	until [[ $DNS =~ ^[0-9]+$ ]] && [ "$DNS" -ge 1 ] && [ "$DNS" -le 13 ]; do
-		read -rp "选择 [1-12]: " -e -i 8 DNS
+		read -rp "DNS [1-12]: " -e -i 11 DNS
 		if [[ $DNS == 2 ]] && [[ -e /etc/unbound/unbound.conf ]]; then
+			echo ""
+			echo "Unbound is already installed."
+			echo "You can allow the script to configure it in order to use it from your OpenVPN clients"
+			echo "We will simply add a second server to /etc/unbound/unbound.conf for the OpenVPN subnet."
+			echo "No changes are made to the current configuration."
 			echo ""
 
 			until [[ $CONTINUE =~ (y|n) ]]; do
-				read -rp "将配置更改应用到 Unbound？[y/n]: " -e CONTINUE
+				read -rp "Apply configuration changes to Unbound? [y/n]: " -e CONTINUE
 			done
 			if [[ $CONTINUE == "n" ]]; then
 				# Break the loop and cleanup
@@ -347,17 +356,17 @@ function installQuestions() {
 		fi
 	done
 	echo ""
-	echo "启用压缩吗[默认n]"
+	echo "Do you want to use compression? It is not recommended since the VORACLE attack makes use of it."
 	until [[ $COMPRESSION_ENABLED =~ (y|n) ]]; do
-		read -rp"选择 [y/n]: " -e -i n COMPRESSION_ENABLED
+		read -rp"Enable compression? [y/n]: " -e -i n COMPRESSION_ENABLED
 	done
 	if [[ $COMPRESSION_ENABLED == "y" ]]; then
-		echo "选择您要使用的压缩算法（按效率排序）"
+		echo "Choose which compression algorithm you want to use: (they are ordered by efficiency)"
 		echo "   1) LZ4-v2"
 		echo "   2) LZ4"
 		echo "   3) LZ0"
 		until [[ $COMPRESSION_CHOICE =~ ^[1-3]$ ]]; do
-			read -rp"选择 [1-3]: " -e -i 1 COMPRESSION_CHOICE
+			read -rp"Compression algorithm [1-3]: " -e -i 1 COMPRESSION_CHOICE
 		done
 		case $COMPRESSION_CHOICE in
 		1)
@@ -372,10 +381,13 @@ function installQuestions() {
 		esac
 	fi
 	echo ""
-	echo "推荐默认参数。"
+	echo "Do you want to customize encryption settings?"
+	echo "Unless you know what you're doing, you should stick with the default parameters provided by the script."
+	echo "Note that whatever you choose, all the choices presented in the script are safe. (Unlike OpenVPN's defaults)"
+	echo "See https://github.com/angristan/openvpn-install#security-and-encryption to learn more."
 	echo ""
 	until [[ $CUSTOMIZE_ENC =~ (y|n) ]]; do
-		read -rp "选择 [y/n]: " -e -i n CUSTOMIZE_ENC
+		read -rp "Customize encryption settings? [y/n]: " -e -i n CUSTOMIZE_ENC
 	done
 	if [[ $CUSTOMIZE_ENC == "n" ]]; then
 		# Use default, sane and fast parameters
@@ -389,15 +401,15 @@ function installQuestions() {
 		TLS_SIG="1" # tls-crypt
 	else
 		echo ""
-		echo "数据通道的密码："
-		echo "   1) AES-128-GCM (默认)"
+		echo "Choose which cipher you want to use for the data channel:"
+		echo "   1) AES-128-GCM (recommended)"
 		echo "   2) AES-192-GCM"
 		echo "   3) AES-256-GCM"
 		echo "   4) AES-128-CBC"
 		echo "   5) AES-192-CBC"
 		echo "   6) AES-256-CBC"
 		until [[ $CIPHER_CHOICE =~ ^[1-6]$ ]]; do
-			read -rp "选择 [1-6]: " -e -i 1 CIPHER_CHOICE
+			read -rp "Cipher [1-6]: " -e -i 1 CIPHER_CHOICE
 		done
 		case $CIPHER_CHOICE in
 		1)
@@ -420,21 +432,21 @@ function installQuestions() {
 			;;
 		esac
 		echo ""
-		echo "证书类型"
-		echo "   1) ECDSA (默认)"
+		echo "Choose what kind of certificate you want to use:"
+		echo "   1) ECDSA (recommended)"
 		echo "   2) RSA"
 		until [[ $CERT_TYPE =~ ^[1-2]$ ]]; do
-			read -rp"选择 [1-2]: " -e -i 1 CERT_TYPE
+			read -rp"Certificate key type [1-2]: " -e -i 1 CERT_TYPE
 		done
 		case $CERT_TYPE in
 		1)
 			echo ""
-			echo "证书密钥曲线"
-			echo "   1) prime256v1 (默认)"
+			echo "Choose which curve you want to use for the certificate's key:"
+			echo "   1) prime256v1 (recommended)"
 			echo "   2) secp384r1"
 			echo "   3) secp521r1"
 			until [[ $CERT_CURVE_CHOICE =~ ^[1-3]$ ]]; do
-				read -rp"选择 [1-3]: " -e -i 1 CERT_CURVE_CHOICE
+				read -rp"Curve [1-3]: " -e -i 1 CERT_CURVE_CHOICE
 			done
 			case $CERT_CURVE_CHOICE in
 			1)
@@ -451,11 +463,11 @@ function installQuestions() {
 		2)
 			echo ""
 			echo "Choose which size you want to use for the certificate's RSA key:"
-			echo "   1) 2048 bits (默认)"
+			echo "   1) 2048 bits (recommended)"
 			echo "   2) 3072 bits"
 			echo "   3) 4096 bits"
 			until [[ $RSA_KEY_SIZE_CHOICE =~ ^[1-3]$ ]]; do
-				read -rp "选择 [1-3]: " -e -i 1 RSA_KEY_SIZE_CHOICE
+				read -rp "RSA key size [1-3]: " -e -i 1 RSA_KEY_SIZE_CHOICE
 			done
 			case $RSA_KEY_SIZE_CHOICE in
 			1)
@@ -474,10 +486,10 @@ function installQuestions() {
 		echo "Choose which cipher you want to use for the control channel:"
 		case $CERT_TYPE in
 		1)
-			echo "   1) ECDHE-ECDSA-AES-128-GCM-SHA256 (默认)"
+			echo "   1) ECDHE-ECDSA-AES-128-GCM-SHA256 (recommended)"
 			echo "   2) ECDHE-ECDSA-AES-256-GCM-SHA384"
 			until [[ $CC_CIPHER_CHOICE =~ ^[1-2]$ ]]; do
-				read -rp"选择 [1-2]: " -e -i 1 CC_CIPHER_CHOICE
+				read -rp"Control channel cipher [1-2]: " -e -i 1 CC_CIPHER_CHOICE
 			done
 			case $CC_CIPHER_CHOICE in
 			1)
@@ -489,10 +501,10 @@ function installQuestions() {
 			esac
 			;;
 		2)
-			echo "   1) ECDHE-RSA-AES-128-GCM-SHA256 (默认)"
+			echo "   1) ECDHE-RSA-AES-128-GCM-SHA256 (recommended)"
 			echo "   2) ECDHE-RSA-AES-256-GCM-SHA384"
 			until [[ $CC_CIPHER_CHOICE =~ ^[1-2]$ ]]; do
-				read -rp"选择 [1-2]: " -e -i 1 CC_CIPHER_CHOICE
+				read -rp"Control channel cipher [1-2]: " -e -i 1 CC_CIPHER_CHOICE
 			done
 			case $CC_CIPHER_CHOICE in
 			1)
@@ -505,21 +517,21 @@ function installQuestions() {
 			;;
 		esac
 		echo ""
-		echo "Diffie-Hellman密钥类型"
-		echo "   1) ECDH (默认)"
+		echo "Choose what kind of Diffie-Hellman key you want to use:"
+		echo "   1) ECDH (recommended)"
 		echo "   2) DH"
 		until [[ $DH_TYPE =~ [1-2] ]]; do
-			read -rp"选择 [1-2]: " -e -i 1 DH_TYPE
+			read -rp"DH key type [1-2]: " -e -i 1 DH_TYPE
 		done
 		case $DH_TYPE in
 		1)
 			echo ""
-			echo "ECDH 密钥的曲线"
-			echo "   1) prime256v1 (默认)"
+			echo "Choose which curve you want to use for the ECDH key:"
+			echo "   1) prime256v1 (recommended)"
 			echo "   2) secp384r1"
 			echo "   3) secp521r1"
 			while [[ $DH_CURVE_CHOICE != "1" && $DH_CURVE_CHOICE != "2" && $DH_CURVE_CHOICE != "3" ]]; do
-				read -rp"选择 [1-3]: " -e -i 1 DH_CURVE_CHOICE
+				read -rp"Curve [1-3]: " -e -i 1 DH_CURVE_CHOICE
 			done
 			case $DH_CURVE_CHOICE in
 			1)
@@ -535,12 +547,12 @@ function installQuestions() {
 			;;
 		2)
 			echo ""
-			echo "Diffie-Hellman 密钥长度"
-			echo "   1) 2048 bits (默认)"
+			echo "Choose what size of Diffie-Hellman key you want to use:"
+			echo "   1) 2048 bits (recommended)"
 			echo "   2) 3072 bits"
 			echo "   3) 4096 bits"
 			until [[ $DH_KEY_SIZE_CHOICE =~ ^[1-3]$ ]]; do
-				read -rp "选择 [1-3]: " -e -i 1 DH_KEY_SIZE_CHOICE
+				read -rp "DH key size [1-3]: " -e -i 1 DH_KEY_SIZE_CHOICE
 			done
 			case $DH_KEY_SIZE_CHOICE in
 			1)
@@ -558,16 +570,16 @@ function installQuestions() {
 		echo ""
 		# The "auth" options behaves differently with AEAD ciphers
 		if [[ $CIPHER =~ CBC$ ]]; then
-			echo "摘要算法对来自控制通道的数据通道数据包和 tls-auth 数据包进行身份验证."
+			echo "The digest algorithm authenticates data channel packets and tls-auth packets from the control channel."
 		elif [[ $CIPHER =~ GCM$ ]]; then
-			echo "摘要算法对来自控制通道的 tls-auth 数据包进行身份验证。"
+			echo "The digest algorithm authenticates tls-auth packets from the control channel."
 		fi
-		echo "HMAC 使用哪种算法"
-		echo "   1) SHA-256 (默认)"
+		echo "Which digest algorithm do you want to use for HMAC?"
+		echo "   1) SHA-256 (recommended)"
 		echo "   2) SHA-384"
 		echo "   3) SHA-512"
 		until [[ $HMAC_ALG_CHOICE =~ ^[1-3]$ ]]; do
-			read -rp "选择 [1-3]: " -e -i 1 HMAC_ALG_CHOICE
+			read -rp "Digest algorithm [1-3]: " -e -i 1 HMAC_ALG_CHOICE
 		done
 		case $HMAC_ALG_CHOICE in
 		1)
@@ -581,18 +593,20 @@ function installQuestions() {
 			;;
 		esac
 		echo ""
-		echo "您可以使用 tls-auth 和 tls-crypt 为控制通道添加额外的安全层"
-		echo "tls-auth 对数据包进行身份验证，而 tls-crypt 对数据包进行身份验证和加密。"
-		echo "   1) tls-crypt (默认)"
+		echo "You can add an additional layer of security to the control channel with tls-auth and tls-crypt"
+		echo "tls-auth authenticates the packets, while tls-crypt authenticate and encrypt them."
+		echo "   1) tls-crypt (recommended)"
 		echo "   2) tls-auth"
 		until [[ $TLS_SIG =~ [1-2] ]]; do
-			read -rp "选择 [1-2]: " -e -i 1 TLS_SIG
+			read -rp "Control channel additional security mechanism [1-2]: " -e -i 1 TLS_SIG
 		done
 	fi
 	echo ""
+	echo "Okay, that was all I needed. We are ready to setup your OpenVPN server now."
+	echo "You will be able to generate a client at the end of the installation."
 	APPROVE_INSTALL=${APPROVE_INSTALL:-n}
 	if [[ $APPROVE_INSTALL =~ n ]]; then
-		read -n1 -r -p "按任意键继续......"
+		read -n1 -r -p "Press any key to continue..."
 	fi
 }
 
@@ -636,10 +650,10 @@ function installOpenVPN() {
 	# $NIC can not be empty for script rm-openvpn-rules.sh
 	if [[ -z $NIC ]]; then
 		echo
-		echo "无法检测公共接口。"
-		echo "这需要设置MASQUERADE。"
+		echo "Can not detect public interface."
+		echo "This needs for setup MASQUERADE."
 		until [[ $CONTINUE =~ (y|n) ]]; do
-			read -rp "继续 [y/n]: " -e CONTINUE
+			read -rp "Continue? [y/n]: " -e CONTINUE
 		done
 		if [[ $CONTINUE == "n" ]]; then
 			exit 1
@@ -692,8 +706,8 @@ function installOpenVPN() {
 
 	# Install the latest version of easy-rsa from source, if not already installed.
 	if [[ ! -d /etc/openvpn/easy-rsa/ ]]; then
-		local version="3.1.7"
-		wget -O ~/easy-rsa.tgz https://github.com/xxf185/easy-rsa/releases/download/v${version}/EasyRSA-${version}.tgz
+		local version="3.1.2"
+		wget -O ~/easy-rsa.tgz https://github.com/OpenVPN/easy-rsa/releases/download/v${version}/EasyRSA-${version}.tgz
 		mkdir -p /etc/openvpn/easy-rsa
 		tar xzf ~/easy-rsa.tgz --strip-components=1 --no-same-owner --directory /etc/openvpn/easy-rsa
 		rm -f ~/easy-rsa.tgz
@@ -1045,23 +1059,27 @@ verb 3" >>/etc/openvpn/client-template.txt
 
 function newClient() {
 	echo ""
-	echo "输入用户名"
+	echo "Tell me a name for the client."
+	echo "The name must consist of alphanumeric character. It may also include an underscore or a dash."
 
 	until [[ $CLIENT =~ ^[a-zA-Z0-9_-]+$ ]]; do
-		read -rp "Client name:  " -e CLIENT
+		read -rp "Client name: " -e CLIENT
 	done
 
 	echo ""
-	echo "   1) 添加无密码配置文件"
-	echo "   2) 添加有密码配置文件"
+	echo "Do you want to protect the configuration file with a password?"
+	echo "(e.g. encrypt the private key with a password)"
+	echo "   1) Add a passwordless client"
+	echo "   2) Use a password for the client"
 
 	until [[ $PASS =~ ^[1-2]$ ]]; do
-		read -rp "选择 [1-2]: " -e -i 1 PASS
+		read -rp "Select an option [1-2]: " -e -i 1 PASS
 	done
 
 	CLIENTEXISTS=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep -c -E "/CN=$CLIENT\$")
 	if [[ $CLIENTEXISTS == '1' ]]; then
 		echo ""
+		echo "The specified client CN was already found in easy-rsa, please choose another name."
 		exit
 	else
 		cd /etc/openvpn/easy-rsa/ || return
@@ -1074,7 +1092,7 @@ function newClient() {
 			./easyrsa --batch build-client-full "$CLIENT"
 			;;
 		esac
-		echo "用户$CLIENT已添加"
+		echo "Client $CLIENT added."
 	fi
 
 	# Home directory of the user, where the client configuration will be written
@@ -1132,9 +1150,8 @@ function newClient() {
 	} >>"$homeDir/$CLIENT.ovpn"
 
 	echo ""
-	echo "安装完成"
-	echo "配置文件目录 $homeDir/$CLIENT.ovpn."
-	echo "下载.ovpn文件并将其导入OpenVPN客户端"
+	echo "The configuration file has been written to $homeDir/$CLIENT.ovpn."
+	echo "Download the .ovpn file and import it in your OpenVPN client."
 
 	exit 0
 }
@@ -1143,18 +1160,18 @@ function revokeClient() {
 	NUMBEROFCLIENTS=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep -c "^V")
 	if [[ $NUMBEROFCLIENTS == '0' ]]; then
 		echo ""
-		echo "没有用户"
+		echo "You have no existing clients!"
 		exit 1
 	fi
 
 	echo ""
-	echo "移除用户"
+	echo "Select the existing client certificate you want to revoke"
 	tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2 | nl -s ') '
 	until [[ $CLIENTNUMBER -ge 1 && $CLIENTNUMBER -le $NUMBEROFCLIENTS ]]; do
 		if [[ $CLIENTNUMBER == '1' ]]; then
-			read -rp "选择 [1]: " CLIENTNUMBER
+			read -rp "Select one client [1]: " CLIENTNUMBER
 		else
-			read -rp "选择 [1-$NUMBEROFCLIENTS]: " CLIENTNUMBER
+			read -rp "Select one client [1-$NUMBEROFCLIENTS]: " CLIENTNUMBER
 		fi
 	done
 	CLIENT=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2 | sed -n "$CLIENTNUMBER"p)
@@ -1170,7 +1187,7 @@ function revokeClient() {
 	cp /etc/openvpn/easy-rsa/pki/index.txt{,.bk}
 
 	echo ""
-	echo "$CLIENT已移除"
+	echo "Certificate for client $CLIENT revoked."
 }
 
 function removeUnbound() {
@@ -1180,8 +1197,8 @@ function removeUnbound() {
 
 	until [[ $REMOVE_UNBOUND =~ (y|n) ]]; do
 		echo ""
-		echo "如果安装 OpenVPN 之前已经使用 Unbound，就会删除与 OpenVPN 相关的配置。"
-		read -rp "删除Unbound？ [y/n]: " -e REMOVE_UNBOUND
+		echo "If you were already using Unbound before installing OpenVPN, I removed the configuration related to OpenVPN."
+		read -rp "Do you want to completely remove Unbound? [y/n]: " -e REMOVE_UNBOUND
 	done
 
 	if [[ $REMOVE_UNBOUND == 'y' ]]; then
@@ -1201,17 +1218,17 @@ function removeUnbound() {
 		rm -rf /etc/unbound/
 
 		echo ""
-		echo "未绑定已删除！"
+		echo "Unbound removed!"
 	else
 		systemctl restart unbound
 		echo ""
-		echo "未绑定未删除。"
+		echo "Unbound wasn't removed."
 	fi
 }
 
 function removeOpenVPN() {
 	echo ""
-	read -rp "卸载OpenVPN? [y/n]: " -e -i y REMOVE
+	read -rp "Do you really want to remove OpenVPN? [y/n]: " -e -i n REMOVE
 	if [[ $REMOVE == 'y' ]]; then
 		# Get OpenVPN port from the configuration
 		PORT=$(grep '^port ' /etc/openvpn/server.conf | cut -d " " -f 2)
@@ -1278,23 +1295,26 @@ function removeOpenVPN() {
 			removeUnbound
 		fi
 		echo ""
-		echo "卸载完成"
+		echo "OpenVPN removed!"
 	else
 		echo ""
-		echo "删除失败"
+		echo "Removal aborted!"
 	fi
 }
 
 function manageMenu() {
+	echo "Welcome to OpenVPN-install!"
+	echo "The git repository is available at: https://github.com/angristan/openvpn-install"
 	echo ""
-	echo "--------------------OpenVPN--------------------"
+	echo "It looks like OpenVPN is already installed."
 	echo ""
-	echo "   1) 添加用户"
-	echo "   2) 移除用户"
-	echo "   3) 卸载"
-	echo "   4) 退出"
+	echo "What do you want to do?"
+	echo "   1) Add a new user"
+	echo "   2) Revoke existing user"
+	echo "   3) Remove OpenVPN"
+	echo "   4) Exit"
 	until [[ $MENU_OPTION =~ ^[1-4]$ ]]; do
-		read -rp "选择[1-4]: " MENU_OPTION
+		read -rp "Select an option [1-4]: " MENU_OPTION
 	done
 
 	case $MENU_OPTION in
