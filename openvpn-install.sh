@@ -1290,7 +1290,7 @@ function manageMenu() {
 	echo ""
 	echo "OpenVPN已经安装"
 	echo ""
-	echo "   1) 添加用户"
+	echo "   1) 添加新用户"
 	echo "   2) 移除用户"
 	echo "   3) 卸载OpenVPN"
 	echo "   4) 退出"
