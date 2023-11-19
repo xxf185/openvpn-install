@@ -305,7 +305,7 @@ function installQuestions() {
 		;;
 	esac
 	echo ""
-	echo "DNS resolvers"
+	echo "DNS server"
 	echo "   1) Current system resolvers (from /etc/resolv.conf)"
 	echo "   2) Self-hosted DNS Resolver (Unbound)"
 	echo "   3) Cloudflare (Anycast: worldwide)"
@@ -350,9 +350,9 @@ function installQuestions() {
 		fi
 	done
 	echo ""
-	echo "您想使用压缩吗？ 不建议这样做，因为 VORACLE 攻击会利用它。"
+	echo "您想使用压缩吗"
 	until [[ $COMPRESSION_ENABLED =~ (y|n) ]]; do
-		read -rp"启用压缩? [y/n]: " -e -i n COMPRESSION_ENABLED
+		read -rp"选择 [y/n]: " -e -i n COMPRESSION_ENABLED
 	done
 	if [[ $COMPRESSION_ENABLED == "y" ]]; then
 		echo "Choose which compression algorithm you want to use: (they are ordered by efficiency)"
@@ -1080,7 +1080,7 @@ function newClient() {
 			./easyrsa --batch build-client-full "$CLIENT"
 			;;
 		esac
-		echo "用户  $CLIENT已添加"
+		echo " $CLIENT已添加"
 	fi
 
 	# Home directory of the user, where the client configuration will be written
@@ -1153,13 +1153,13 @@ function revokeClient() {
 	fi
 
 	echo ""
-	echo "Select the existing client certificate you want to revoke"
+	echo "移除用户"
 	tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2 | nl -s ') '
 	until [[ $CLIENTNUMBER -ge 1 && $CLIENTNUMBER -le $NUMBEROFCLIENTS ]]; do
 		if [[ $CLIENTNUMBER == '1' ]]; then
-			read -rp "Select one client [1]: " CLIENTNUMBER
+			read -rp "选择 [1]: " CLIENTNUMBER
 		else
-			read -rp "Select one client [1-$NUMBEROFCLIENTS]: " CLIENTNUMBER
+			read -rp "选择 [1-$NUMBEROFCLIENTS]: " CLIENTNUMBER
 		fi
 	done
 	CLIENT=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep "^V" | cut -d '=' -f 2 | sed -n "$CLIENTNUMBER"p)
@@ -1175,7 +1175,7 @@ function revokeClient() {
 	cp /etc/openvpn/easy-rsa/pki/index.txt{,.bk}
 
 	echo ""
-	echo "Certificate for client $CLIENT revoked."
+	echo "$CLIENT 已移除"
 }
 
 function removeUnbound() {
@@ -1185,8 +1185,7 @@ function removeUnbound() {
 
 	until [[ $REMOVE_UNBOUND =~ (y|n) ]]; do
 		echo ""
-		echo "If you were already using Unbound before installing OpenVPN, I removed the configuration related to OpenVPN."
-		read -rp "Do you want to completely remove Unbound? [y/n]: " -e REMOVE_UNBOUND
+		read -rp "确认卸载Unbound? [y/n]: " -e REMOVE_UNBOUND
 	done
 
 	if [[ $REMOVE_UNBOUND == 'y' ]]; then
@@ -1216,7 +1215,7 @@ function removeUnbound() {
 
 function removeOpenVPN() {
 	echo ""
-	read -rp "Do you really want to remove OpenVPN? [y/n]: " -e -i y REMOVE
+	read -rp "确认卸载OpenVPN? [y/n]: " -e -i y REMOVE
 	if [[ $REMOVE == 'y' ]]; then
 		# Get OpenVPN port from the configuration
 		PORT=$(grep '^port ' /etc/openvpn/server.conf | cut -d " " -f 2)
@@ -1283,10 +1282,10 @@ function removeOpenVPN() {
 			removeUnbound
 		fi
 		echo ""
-		echo "OpenVPN removed!"
+		echo "OpenVPN卸载完成"
 	else
 		echo ""
-		echo "Removal aborted!"
+		echo "OpenVPN取消卸载"
 	fi
 }
 
