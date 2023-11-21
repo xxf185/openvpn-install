@@ -1,4 +1,4 @@
-适用于 Ubuntu、Debian、AlmaLinux、Rocky Linux、CentOS 和 Fedora 的OpenVPN公路战士安装程序。
+适用于 Ubuntu、Debian、AlmaLinux、Rocky Linux、CentOS 和 Fedora 的OpenVPN安装程序。
 
 即使您以前没有使用过 OpenVPN，此脚本也可以让您在不到一分钟的时间内设置自己的 VPN 服务器。
 
